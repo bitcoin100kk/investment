@@ -207,10 +207,6 @@ if 'start_year' not in st.session_state:
 if 'end_year' not in st.session_state:
     st.session_state['end_year'] = None
 
-
-# -----------------------------
-# 3) FETCH & COMBINE DATA
-# -----------------------------
 try:
     # Weighted combined returns for the entire portfolio
     annual_returns, dividend_yields, years = combine_returns_and_dividends(
@@ -220,19 +216,33 @@ try:
     if len(annual_returns) == 0:
         st.error("No data available for the provided tickers.")
     else:
-        # If no default in session or out-of-range, use min & max from data
-        if st.session_state['start_year'] is None or st.session_state['start_year'] not in years:
-            st.session_state['start_year'] = years[0]
-        if st.session_state['end_year'] is None or st.session_state['end_year'] not in years:
-            st.session_state['end_year'] = years[-1]
+        # Set up manual year input fields
+        col1, col2 = st.columns(2)
+        with col1:
+            start_year_input = st.number_input(
+                "Start Year",
+                min_value=min(years),
+                max_value=max(years),
+                value=st.session_state['start_year'] if st.session_state['start_year'] else min(years),
+                step=1
+            )
+        with col2:
+            end_year_input = st.number_input(
+                "End Year",
+                min_value=min(years),
+                max_value=max(years),
+                value=st.session_state['end_year'] if st.session_state['end_year'] else max(years),
+                step=1
+            )
 
-        # Create a select slider with the available years
+        # Add a slider for selecting the year range
         start_year, end_year = st.select_slider(
             "Select year range",
             options=years,
-            value=(st.session_state['start_year'], st.session_state['end_year'])
+            value=(start_year_input, end_year_input)
         )
 
+        # Synchronize manual inputs and slider
         st.session_state['start_year'] = start_year
         st.session_state['end_year'] = end_year
 
